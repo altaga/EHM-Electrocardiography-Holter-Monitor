@@ -69,6 +69,9 @@ static uint8_t holdCount = 0;
 uint32_t MAIN_dataTask(void *payload);
 timerStruct_t MAIN_dataTasksTimer = {MAIN_dataTask};
 int adc_result = 0;
+int array[42];
+int adc_counter = 0;
+char buf[128];
 #define ADC_CHANNEL 7
 
 static void wifiConnectionStateChanged(uint8_t status);
@@ -80,16 +83,17 @@ timerStruct_t initDeviceShadowTimer = {initDeviceShadow};
 
 void loadDefaultAWSEndpoint(void);
 
-#define PERIOD_EXAMPLE_VALUE    (83) // 150 HZ min sample rate AHA https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwjs1K-4iM3tAhUQXKwKHcglAncQFjABegQIBBAC&url=https%3A%2F%2Fwww.ahajournals.org%2Fdoi%2Fpdf%2F10.1161%2Fhc5001.101063%23%3A~%3Atext%3DThe%2520American%2520Heart%2520Association%2520(AHA%2Cthe%2520limitations%2520of%2520previous%2520studies.&usg=AOvVaw38JqixTbKeuD7eR6_EVrIB
+#define PERIOD_EXAMPLE_VALUE    (300) // 150 HZ min sample rate AHA https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwjs1K-4iM3tAhUQXKwKHcglAncQFjABegQIBBAC&url=https%3A%2F%2Fwww.ahajournals.org%2Fdoi%2Fpdf%2F10.1161%2Fhc5001.101063%23%3A~%3Atext%3DThe%2520American%2520Heart%2520Association%2520(AHA%2Cthe%2520limitations%2520of%2520previous%2520studies.&usg=AOvVaw38JqixTbKeuD7eR6_EVrIB
 
 void TCA0_init(void);
-
-int counter = 0;
 
 void free_running() {
     while (1) {
         if (ADC0_IsConversionDone()) {
-            adc_result = ADC0.RES;
+            if (adc_counter < sizeof array / sizeof array[0]) {
+                array[adc_counter] = ADC0.RES;
+                adc_counter++;
+            }
             break;
         }
     }
@@ -97,7 +101,6 @@ void free_running() {
 
 ISR(TCA0_OVF_vect) {
     free_running();
-    counter++;
     TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
 }
 // This will get called every 1 second only while we have a valid Cloud connection
@@ -105,16 +108,21 @@ ISR(TCA0_OVF_vect) {
 static void sendToCloud(void) {
     static char json[PAYLOAD_SIZE];
     static char publishMqttTopic[PUBLISH_TOPIC_SIZE];
-    int rawTemperature = 0;
-    //int light = 0;
     int len = 0;
-    int temp = 0;
     memset((void*) publishMqttTopic, 0, sizeof (publishMqttTopic));
     sprintf(publishMqttTopic, "%s/sensors", cid);
     // This part runs every CFG_SEND_INTERVAL seconds
     if (shared_networking_params.haveAPConnection) {
-        len = sprintf(json, "{\"ADC\":%d,\"Counter\":%d}", adc_result, counter);
-        counter = 0;
+        int size = sizeof array / sizeof array[0];
+        char *pos = buf;
+        for (int i = 0; i != adc_counter; i++) {
+            if (i) {
+                pos += sprintf(pos, ", ");
+            }
+            pos += sprintf(pos, "%d", array[i]);
+        }
+        len = sprintf(json, "{\"ADC\":[%d],\"Data\":[%s]}",adc_counter, buf);
+        adc_counter = 0;
     }
     if (len > 0) {
         CLOUD_publishData((uint8_t*) publishMqttTopic, (uint8_t*) json, len);
@@ -242,8 +250,7 @@ void runScheduler(void) {
 uint32_t MAIN_dataTask(void *payload) {
     if (CLOUD_checkIsConnected()) {
         sendToCloud();
-    }
-    else {
+    } else {
         ledParameterYellow.onTime = SOLID_OFF;
         ledParameterYellow.offTime = SOLID_ON;
         LED_control(&ledParameterYellow);
