@@ -117,11 +117,11 @@ static void sendToCloud(void) {
         char *pos = buf;
         for (int i = 0; i != adc_counter; i++) {
             if (i) {
-                pos += sprintf(pos, ", ");
+                pos += sprintf(pos, ",");
             }
             pos += sprintf(pos, "%d", array[i]);
         }
-        len = sprintf(json, "{\"ADC\":[%d],\"Data\":[%s]}",adc_counter, buf);
+        len = sprintf(json, "{\"Data\":%s}",buf);
         adc_counter = 0;
     }
     if (len > 0) {
