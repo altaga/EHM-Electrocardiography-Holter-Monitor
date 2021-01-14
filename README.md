@@ -64,7 +64,13 @@ That's why I decided through AVR-IoT WA develope an ECG/EKG Holter monitor which
 
 # **Solution**
 
-<img src="PENDING" width="600">
+Diagram:
+
+<img src="https://i.ibb.co/Hr7MsQh/Untitled-Sketch-bb.png" width="600">
+
+Circuit:
+
+<img src="https://i.ibb.co/Hr7MsQh/Untitled-Sketch-bb.png" width="600">
 
 # **Materials**
 
