@@ -17,31 +17,15 @@
 - [**Connection Diagram**](#connection-diagram)
 - [**Project:**](#project)
   - [**AVR-IoT WA Setup**](#avr-iot-wa-setup)
-  - [**Training Dataset**](#training-dataset)
-  - [**Train Environment Setup**](#train-environment-setup)
-  - [**Training the model**](#training-the-model)
-  - [**Board Setup**](#board-setup)
-  - [**Test Pynq**](#test-pynq)
-  - [**Test Model**](#test-model)
-  - [**Comparison Benchmarks:**](#comparison-benchmarks)
-    - [**Algorithm**](#algorithm)
-    - [**Boards tested**](#boards-tested)
-    - [**Benchmark table**](#benchmark-table)
-    - [**Comparison chart**](#comparison-chart)
-  - [**Extra Hardware Development:**](#extra-hardware-development)
-    - [**Display**](#display)
-    - [**FaceMask Dispenser**](#facemask-dispenser)
-    - [**Temperature**](#temperature)
-  - [**Extra Software Development**](#extra-software-development)
-    - [**App installed from APK**:](#app-installed-from-apk)
-    - [**Screenshots and App running**:](#screenshots-and-app-running)
-  - [**Final Code**](#final-code)
+  - [**Code Highlights**](#code-highlights)
+  - [**Dry Electrodes**](#dry-electrodes)
+  - [**Electrode arrangement**](#electrode-arrangement)
+  - [**WebPage**](#webpage)
 - [**Final Product**](#final-product)
   - [WE ACTUALLY TESTED IT IN A WORKING BUSINESS](#we-actually-tested-it-in-a-working-business)
 - [**Epic DEMO**](#epic-demo)
   - [Closing](#closing)
 - [**References**](#references)
-- [**APPENDIX A**](#appendix-a)
 
 # **Introduction**
 
@@ -120,377 +104,162 @@ Circuit:
 
 ## **AVR-IoT WA Setup**
 
-In order to solve the problem of detecting the use of masks, it is necessary to carry out a CCN (convolutional neural network) which is capable of identifying if a human face is  wearing a mask.
+Para poder realizar el primer setup de nuestro dispositivo recomiendo que sigas la guia oficial de Microchip ya que es un proceso muy sencillo de realizar en el caso de AWS.
 
-<img src="https://i.ibb.co/WF6Q64G/image-2.png" width="1000">
+https://github.com/microchip-pic-avr-solutions/microchip-iot-developer-guides-for-aws/tree/master/connect-the-board-to-your-aws-account
 
-To train a CCN as we know, it is necessary to use a large number of images. Which will serve the convolutions as examples to be able to correctly filter the characteristics of the images and thus be able to give a result.
+En este caso deberas de ver los datos de la board llegando a AWS IoT de la siguiente forma 1 cada segundo:
 
-## **Training Dataset**
+<img src="https://i.ibb.co/DWxsWHN/image.png" width="1000">
 
-In this case, we used 1916 positive images and 1930 negative images as the dataset.
+En mi caso estoy obteniendo los datos de un ECG, anota el numero que aparece como topic, ya que este numero nos servira mas adelante para visualizar los datos de nuestra pagina web.
 
-https://www.kaggle.com/altaga/facemaskdataset
-https://github.com/altaga/Facemask-Detector-ZCU104/tree/main/facemask-dataset
+NOTA: Haciendo un copy/paste en un bloc de notas podras ver el topic completo, AWS por estetica lo corta cuando lo visualizas.
 
-I invite the reader to review the dataset and to check the images yourself, the structure of the folders is:
+<img src="https://i.ibb.co/jbbFC2k/image.png" width="1000">
 
-- Dataset
-    - Yes
-        - IMG#
-        - IMG#
-    - No
-        - IMG#
-        - IMG#
+## **Code Highlights**
 
-The classification that we seek to achieve with this CNN is the following:
+Para poder programar correctamente el microcontrolador tenemos que saber que el microcontrolador es:
 
-<img src="https://i.ibb.co/Sc74RBS/image.png" width="1000">
+https://www.microchip.com/wwwproducts/en/ATmega4808
 
-## **Train Environment Setup**
+Para poder obtener correctamente una lectura de ECG y mandarla a AWS sin perder datos, debemos tener en consideracion ciertas cosas:
 
-To perform the neural network training correctly, it is necessary to use the environment that Xilinx offers us for AI adapted to models focused on DPU which runs on Ubuntu 18.04.3.
+- La frecuencia minima de muestreo segun la AHA para un ECG es de 150Hz [1].
+  - Para solucionar esto hicimos que la velocidad de muestreo fuera de 150 HZ a travez de programar una interrupcion por Timer, haciendo que el microcontrolador haga esta tarea 150 veces por segundo.
 
-http://old-releases.ubuntu.com/releases/18.04.3/
+        ISR(TCA0_OVF_vect) {
+            free_running();
+            TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
+        }
+        ...
+        void TCA0_init(void) {
+            /* enable overflow interrupt */
+            TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;
 
-NOTE: ONLY IN THIS UBUNTU VEERSION IS ENVIROMENT COMPATIBLE, ONCE YOU INSTALL THE VIRTUAL MACHINE, DO NOT UPDATE ANYTHING, SINCE YOU WILL NOT BE ABLE TO USE THE ENVIROMENT AND YOU WILL HAVE TO INSTALL EVERYTHING AGAIN.
+            /* set Normal mode */
+            TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc;
 
-<img src="https://i.ibb.co/pnjvwMm/image.png" width="1000">
+            /* disable event counting */
+            TCA0.SINGLE.EVCTRL &= ~(TCA_SINGLE_CNTEI_bm);
 
-In my case I use a machine with Windows 10, so to do the training I had to use a virtual machine in VMware.
+            /* set the period */
+            TCA0.SINGLE.PER = PERIOD_EXAMPLE_VALUE;
 
-https://www.vmware.com/mx.html
+            TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1024_gc /* set clock source (sys_clk/1024) */
+                    | TCA_SINGLE_ENABLE_bm; /* start timer */
+        }
+  
+- El microcontrolador va a mandar aproximadamente un dato cada segundo.
+  - Esto se realizo al alterar la velocidad con la que se realiza la rutina en el codigo principal.
 
-Within the options to install the environment there is one to use the GPU and another CPU, since I use the virtual machine I will use the CPU installation.
+        #define MAIN_DATATASK_INTERVAL 1000L
 
-https://github.com/Xilinx/Vitis-AI
+- La obtencion de datos del ecg no se puede detener mientras se mandan los datos a la nube.
+  - Se hizo que el ADC funcionara por free_running para evitar interrupciones de lectura cuando se mandan los datos a nube.
 
-Open the linux terminal and type the following commands.
+        void free_running() {
+            while (1) {
+                if (ADC0_IsConversionDone()) {
+                    if (adc_counter < sizeof array / sizeof array[0]) {
+                        array[adc_counter] = ADC0.RES;
+                        adc_counter++;
+                    }
+                    break;
+                }
+            }
+        }
 
-In the Scripts folder I have already left several .sh files with which you can easily install all the necessary files, these files must be in the /home folder for them to work properly.
+Para mas detalles este codigo esta en la siguiente carpeta:
+https://github.com/altaga/EHM-Electrocardiography-Holter-Monitor/blob/main/MPLAB%20Project/AVRIoT.X/mcc_generated_files/application_manager.c
 
-1. Install Docker (1 - 2 minutes) if you already have Docker go to Script 2.
+<img src="https://i.ibb.co/fQXzyL8/New-Project-8.png" width="1000">
 
-        sudo bash install_docker.sh
+[1] https://www.ahajournals.org/doi/pdf/10.1161/hc5001.101063#:~:text=The%20American%20Heart%20Association%20(AHA,the%20limitations%20of%20previous%20studies.
 
-2. Install Vitis (10 - 20 minutes).
+## **Dry Electrodes**
 
-        sudo bash install_vitis.sh
+Ddebido a que este es un device que vamos a estar utilizando un largo perdiodo de tiempo y ademas es un dispositivo que debe de ser usado todos los dias, podemos entender que el uso de electrodos desechables es poco viable. Asi que por eso decidimos realiza nuestros propios electrodos secos.
 
-NOTE: install only one of the following ENV according to your preference.
+Materials:
+- Copper Plate.
+- Silver Conductive Ink.
+- Electrode External Snap.
 
-3. Install CPU or GPU Support.
+<img src="https://i.ibb.co/hLZ8DTB/20210130-204013.png" width="1000">
 
-   - Installing CPU (20 - 30 minutes).
+## **Electrode arrangement**
 
-           sudo bash install_cpu.sh 
+Para poder realizar la lectura del ECG y que ademas el dispositivo sea los menos incomodo posible, tomamos en consideracion el arreglo de Electrodos de el AppleWatch 
 
-   OR
+<img src="https://i.ibb.co/kcy5XYN/image.png" width="500">
 
-   - Installing the GPU environment (20 - 30 minutes).
+Nosotros colocamos dos electrodos en la mano derecha y uno en la mano izquierda de la siguiente forma.
 
-           sudo bash install_gpu.sh
-        
-4. Start base Env.
+Right:
 
-        sudo bash run_env.sh
+<img src="https://i.ibb.co/26LFnGX/20210130-205858.jpg" width="500">
 
-5. Start Vitis-AI-TensorFlow
+Left:
 
-        conda activate vitis-ai-tensorflow
+<img src="https://i.ibb.co/tD4spc2/20210130-205832.jpg" width="500">
 
-6. Run this command once (IMPORTANT).
-        
-        yes | pip install matplotlib keras==2.2.5
+Ground:
 
-<img src="https://i.ibb.co/yQ4qtXJ/image.png" width="1000">
+<img src="https://i.ibb.co/fYL5W2X/20210130-205900.jpg" width="500">
 
-If you did everything right, you should see a console like this one.
+Con esta dispocicion de electrodos podemos obtener una señal de ECG que si no es perfecta, podremos arreglrla con un poco de procesamiento en la pagina web.
 
-In the [Appendix A](#appendix-a) you can see the Scripts content.
+## **WebPage**
 
-## **Training the model**
+La pagina web se realizo utilizando el framework de ReactJS.
 
-To carry out the training, copy all the files inside the "Setup Notebook and Dataset" repository folder to the Vitis-AI folder for the code to run properly.
+https://reactjs.org/
 
-Just as in the picture.
+Para la funcionalidad de la pagina web se utilizaron dos SDK de AWS para Javascript.
 
-<img src="https://i.ibb.co/zFyKSDM/image.png" width="1000">
+- Para el control de acceso de la pagina web a consumir los recursos de AWSIoT
+https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentity.html
+- Para poder realizar la lectura del topic de AWS IoT
+https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Iot.html
 
-Now in the command console we will execute the following command to open Jupyter Notebooks.
+Para el analisis del ECG se utilizo una funcion Lambda con la cual accedemos mediante API y tiene configurada como funcion con la libreria [Heartpy](https://pypi.org/project/heartpy/).
 
-    jupyter notebook --allow-root
+Para el estilo y frontend de la plataforma se usaron los paquetes:
 
-<img src="https://i.ibb.co/9n01Vhn/image.png" width="1000">
+- ReactStrap: https://reactstrap.github.io/
+- ChartJS : https://www.chartjs.org/
 
-Open the browser and paste the link that appeared in the terminal and open the file.
+Y para el deploy de la plataforma se utilizo como fuente un repositorio de Github y AWS Amplify.
 
-<img src="https://i.ibb.co/Zd4ZLsQ/image.png" width="1000">
+<img src="https://i.ibb.co/Dk8HBL4/image.png" width="1000">
 
-Once the code is open in the Kernel tab, it executes everything as shown in the image.
+La pagina desplegada tiene 2 paths importantes.
 
-<img src="https://i.ibb.co/5K1xhmF/image.png" width="1000">
+- El Index, el cual es la carta de presentacion de nuestra aplicacion
 
-All the code is explained in detail. To understand it fully, please review it.
+<img src="https://i.ibb.co/26H6kfJ/image.png" width="1000">
 
-https://github.com/altaga/Facemask-Detector-ZCU104/blob/main/Setup%20Notebook%20and%20Dataset/train_facemask_model.ipynb
+- El monitor ECG, sin embargo este tiene algo importante, segun el sensor que querramos visualizar, lo tendremos que especificar en el path segun el numero que hayamos recibido en AWS IoT.
 
-After the excecution, if everything worked well we should see the following result.
+<img src="https://i.ibb.co/TcSBcMy/image.png" width="1000">
 
-<img src="https://i.ibb.co/RvhDfpD/image.png" width="1000">
+- La pagina web tiene algunos funciones especiales:
+  - Filtrado de señal en tiempo real
+    - Señal sin filtrar:
+  <img src="https://i.ibb.co/dG5xrqh/image.png" width="1000">
+    - Señal filtrada:
+  <img src="https://i.ibb.co/w7DqPyh/image.png" width="1000">
 
-From this process we will obtain a file called "dpu_face_binary_classifier_0.elf".
+La funcion de Analyze EKG, manda los datos sin filtrar recibidos en la pagina web y los manda a nuestra funcion Lambda para ser analizados por la libreria HeartPy y devuelve datos valiosos para los medicos.
 
-This file has saved the model that we will use later and that has been already provided in the "Main Notebook" folder.
+La funcion de SavePDF salva los datos en pantalla para registro.
 
-## **Board Setup**
+Video: Click on the image
+[![EKG](https://i.ibb.co/h7krzxt/logo.png)](https://youtu.be/zGBveqvmWrU)
 
-The board setup is very simple, first you will have to download the PYNQ operating system.
-
-http://bit.ly/zcu104_v2_6
-
-Once you have this, flash the operating system with a program like Balena Etcher onto the SD included in the Kit. I recommend a memory of at least 16Gb.
-
-https://www.balena.io/etcher/
-
-<img src="https://i.ibb.co/VjR44R3/image.png" width="1000">
-
-Now, before attaching the SD to the Board, plug it to power and turn it on. Check that the switches above the board are in the following position. This will enable boot from SD.
-
-<img src="https://i.ibb.co/5F6YFp9/20201121-230416.jpg" width="600">
-
-Steps to follow when turning on the board for the first time:
-
-<img src="https://pynq.readthedocs.io/en/v2.5.1/_images/zcu104_setup.png" width="600">
-
-Connect the 12V power cable. Note that the connector is keyed and can only be connected in one way.
-
-Insert the Micro SD card loaded with the appropriate PYNQ image into the MicroSD card slot underneath the board
-
-Connect the Ethernet port to your PC.
-
-- You will have to assign a static IP to your ethernet connection to have access to the board, follow the instructions of the following link to the official documentation.
-
-- https://pynq.readthedocs.io/en/v2.5.1/appendix.html#assign-your-computer-a-static-ip
-
-Turn on the board and check the boot sequence.
-
-Once the board has finished booting, from your browser enter the following IP address to access a portal with Jupyer Notebook.
-
-http://192.168.2.99
-
-Password:xilinx
-
-## **Test Pynq**
-
-First we will do a small test to see if the operating system is working correctly. We will set the WiFi, this in addition to indicating that we installed the OS correctly will help us to download the missing libraries for our project.
-
-<img src="https://i.ibb.co/wWL7zb3/image.png" width="1000">
-
-NOTE: As we indicated in the materials section, this needs an external usb wifi card to conneect to the internet.
-
-<img src="https://i.ibb.co/4mbGVmX/image.png" width="1000">
-
-If everything works well, we will get the following response from the ping line:
-
-<img src="https://i.ibb.co/ZTzbSdF/image.png" width="1000">
-
-Now we will install the missing libraries to make the DPU work on the ZCU104. We are going to open a command terminal as shown in the image.
-
-<img src="https://i.ibb.co/gj2NBS8/image.png" width="1000">
-
-From the terminal we have to write the following command, you can copy and paste it all at once.
-
-    git clone --recursive --shallow-submodules https://github.com/Xilinx/DPU-PYNQ \
-    && cd DPU-PYNQ/upgrade \
-    && make \
-    && pip3 install pynq-dpu \
-    && cd $PYNQ_JUPYTER_NOTEBOOKS \
-    && pynq get-notebooks pynq-dpu -p . 
-
-<img src="https://i.ibb.co/2NMqD34/image.png" width="1000">
-
-This process may take some time depending on your internet connection.
-
-## **Test Model**
-
-To test the model we have to download the github folder to our board with the following command.
-
-    git clone https://github.com/altaga/Facemask-Detector-ZCU104
-
-If you prefer you can also transfer only the files from the "Test Notebook" and "Main Notebook" folders to the board.
-
-Inside the Test Notebook folder, we will enter the file "Facemask-ZCU104.ipynb".
-
-All the code is explained in detail, to deepen please review it.
-
-When running everything we see an image like this, it means that everything has worked correctly.
-
-<img src="https://i.ibb.co/ZLHmLq4/image.png" width="600">
-
-## **Comparison Benchmarks:**
-
-For this contest I thought it was important to demonstrate the superiority of FPGAs over conventional HW and AI dedicated HW, when processing neural networks. So, I adapted the code of my model to run on 2 HW that anyone could have as a developer.
-
-### **Algorithm**
-
-Because all the codes display the result on screen, which takes a lot of time, the calculation of the FPS was carried out with the following algorithm.
-
-![FPS](https://i.ibb.co/qkTRsj7/FPS.png)
-
-### **Boards tested**
-
-- RPi4 with 4gb:
-    - Tensor Flow Lite Model.
-    - Tensor Flow Lite Optimized Model.
-- Jetson Nano 4gb:
-    - Tensor Flow Model MAX Consumption Mode.
-    - Tensor Flow Model 5W Consumption Mode.
-- ZCU104:
-    - Vitis AI - Keras optimized Model.
-
-### **Benchmark table**
-
-| Board       | Model                    | Mode      | FPS |
-|  :--------: | :----------------------: | :-------: | :-: |
-| Rpi 4 - 4gb | TfLite                   | Standard  | 55  |
-| Rpi 4 - 4gb | TfLite Optimized         | Standard  | 47  |
-| Jetson Nano | Tf Model                 | Max       | 90  |
-| Jetson Nano | TfLite                   | 5W        | 41  |
-| ZCU104      | Vitis AI <br /> Optimized Model | Standard  | 400 |
-
-### **Comparison chart**
-
-<br />
-<kbd>
-<img src="https://i.ibb.co/yWxNvS6/Final-Benchmark.png" width="1000" />
-</kbd>
-
-For more detail go to the folder, within each folder there is code(s) to train and run the model(s) as well as video and photographic evidence of how it works in real time.
-
-https://github.com/altaga/Facemask-Detector-ZCU104/tree/main/Benchmarks%20Notebooks
-
-## **Extra Hardware Development:**
-
-To measure the useer's temperature and the Facemask dispenser, we created the following circuit with an ESP32.
-
-<kbd>
-<img src="https://i.ibb.co/GPxyQNC/Untitled-Sketch-bb.png" width="1000" />
-</kbd>
-
-Control of this device was done through BLE, in order to use the least amount of battery.
-
-### **Display**
-
-The display has the function of showing different messages, according to the result of the reading of the ZCU104 and the temperature sensor.
-
-Page to convert images to scrollable images on the screen, the images have to be made almost by hand like PIXELART to be able to display them well:
-
-https://sparks.gogo.co.nz/pcd8554-bmp.html
-
-Description:
-
-While a reading is not taking place, we will get the following message.
-
-<img src="https://i.ibb.co/QJzTX9N/Untitledg.png" width="300" />
-
-If the user does not have a facemask, we will display this message.
-
-<img src="https://i.ibb.co/RQFsM7y/sam.png" width="300" />
-
-Before taking the temperature, this image will be displayed so that the useer may bring his hand next to the sensor.
-
-<img src="https://i.ibb.co/Ny5CR8N/temp.png" width="300" />
-
-If the user wears a mask but his/her temperature is very high.
-
-<img src="https://i.ibb.co/G3PzXqN/Dontpass.png" width="300" />
-
-If the user has his face mask and his temperature is normal.
-
-<img src="https://i.ibb.co/LdFdJZ3/wel.png" width="300" />
-
-Here is an example already on the screen.
-
-<img src="https://i.ibb.co/7Sb48LM/vlcsnap-2020-12-05-23h46m46s149.png" width="1000" />
-
-### **FaceMask Dispenser**
-
-If the ZCU104 reading indicates that the person does not have a facemask, the servomotor will offer one to the customer so that the customer can move on to the temperature measurement stage.
-
-------------------------------------------------------------------------------
-
-<img src="https://i.ibb.co/RzKD5SN/ezgif-com-gif-maker-4.gif" width="1000" />
-
-------------------------------------------------------------------------------
-
-<img src="https://i.ibb.co/jbMYDXK/ezgif-com-gif-maker-5.gif" width="1000" />
-
-### **Temperature**
-
-When the ZCU104 indicates that the person is wearing a mask, the temperature of the hand will be taken.
-
-<img src="https://i.stack.imgur.com/HK7op.gif" width="1000" />
-
-To calculate the real temperature of the body, a multivariable linear regression model was performed to obtain an equation that would relate the temperature of the back of the hand and the ambient temperature, to obtain the real internal temperature of the body.
-
-<img src="https://i.ibb.co/Rgm108g/image.png" width="1000">
-
-------------------------------------------------------------------------------
-
-<img src="https://i.ibb.co/qppjkm3/ezgif-com-gif-maker-6.gif" width="1000">
-
-In this case we will take as the maximum reference temperature the one suggested by the CDC [1], which is 100.4 ° F. In the event that the temperature is higher than 100.4 ° F, we will not be able to let the person enter the establishment.
-
-<img src="https://i.ibb.co/D1TrFgx/ezgif-com-gif-maker-7.gif" width="1000" />
-
-1. https://www.cdc.gov/coronavirus/2019-ncov/downloads/COVID-19_CAREKit_ENG.pdf
-2. http://manuals.serverscheck.com/EST-Difference_between_core_and_skin_temperature.pdf
-
-## **Extra Software Development**
-
-In turn, as we have a device that is autonomous in its task. We must have a way to visualize what the device is seeing remotely, so a simple application based on the React Native framework was created for this task.
-
-Features:
-- MQTT based communication.
-- Save images with a button.
-- View the IP and port of the server.
-- Capacity to switch between devices in the event that the establishment has multiple entrances.
-- Plug and Play.
-
-<img src="https://i.ibb.co/2NJGfTJ/Icon.png" height="500" />
-
-### **App installed from APK**:
-<img src="https://i.ibb.co/Pr908P0/Screenshot-20201128-014246-com.png" height="500" />
-
-(Smartphone: Huawei Y6P).
-
-### **Screenshots and App running**:
-<img src="https://i.ibb.co/C7s00Qg/20201128-014028.jpg" height="400" /><img src="https://i.ibb.co/qrzYvbv/Screenshot-20201128-014000-com-monitormqtt.jpg" height="400" /><img src="https://i.ibb.co/jR7wbH4/image1606549108735.jpg" height="400" />
-
-(Smartphone: Huawei Y6P).
-
-You can install the APK which is in the "MonitorMqtt-APK" folder or build it yourself, all the source code of the app is in the "MonitorMqtt" folder. Remember that we use the React Native framework.
-
-If your cellphone has USB debugger mode enabled, you can install the app from your pc with the following command while in the "MonitorMqtt-APK" folder.
-
-    adb install App.apk
-    
-Gif with the app running.
-
-<img src="https://i.ibb.co/0qkzYYh/ezgif-com-gif-maker-2.gif" height="700" />
-
-## **Final Code**
-
-At this time we already have a BLE device with which we can communicate wirelessly.
-
-Once the ZCU104 obtains at least 3 correct readings, we will send the signal to the ESP32 to go to the temperature taking phase. Once the client passes this phase, they will be allowed to enter the establishment.
-
-<img src="https://i.ibb.co/r3g16Gy/olovrgo.png" width="1000" />
-
-The code in the "Main Notebook" folder carriees out all this process.
-
-Link: https://github.com/altaga/Facemask-Detector-ZCU104/tree/main/Main%20Notebook
+Sorry github does not allow embed videos.
 
 # **Final Product**
 
@@ -517,7 +286,7 @@ Complete solution working in local business
 # **Epic DEMO**
 
 Video: Click on the image
-[![EKG](PENDING)](PENDING)
+[![EKG](https://i.ibb.co/h7krzxt/logo.png)](PENDING)
 
 Sorry github does not allow embed videos.
 
@@ -529,64 +298,10 @@ Sorry github does not allow embed videos.
 
 Links:
 
-(1) 
+(1) https://www.ahajournals.org/doi/pdf/10.1161/hc5001.101063#:~:text=The%20American%20Heart%20Association%20(AHA,the%20limitations%20of%20previous%20studies.
 
 (2) 
 
 (3) 
 
 (4) 
-
-
-# **APPENDIX A**
-
-**install_docker.sh**
-
-    #!/bin/sh
-    sudo apt-get remove docker docker-engine docker.io containerd runc -y
-    sudo apt-get update
-    sudo apt-get install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    software-properties-common -y
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo apt-key fingerprint 0EBFCD88
-    sudo add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-    $(lsb_release -cs) \
-    stable"
-    sudo apt-get update
-    sudo apt-get install docker-ce docker-ce-cli containerd.io -y
-    sudo groupadd docker
-    sudo usermod -aG docker $USER
-    docker run hello-world
-
-**install_vitis.sh**
-
-    #!/bin/sh
-    git clone --recurse-submodules https://github.com/Xilinx/Vitis-AI
-    cd Vitis-AI
-    docker pull xilinx/vitis-ai:latest
-    cd     
-
-**install_cpu.sh**
-
-    #!/bin/sh
-    cd Vitis-AI/docker
-    sudo bash ./docker_build_cpu.sh
-    cd   
-
-**install_gpu.sh**
-
-    #!/bin/sh
-    cd Vitis-AI/docker
-    sudo bash ./docker_build_gpu.sh
-    cd    
-
-**install_vitis.sh**
-
-    #!/bin/sh
-    cd Vitis-AI
-    sudo bash docker_run.sh xilinx/vitis-ai-cpu:latest    
