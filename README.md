@@ -284,8 +284,7 @@ Sorry github does not allow embed videos.
 
 Hotler Monitor with Case:
 
-<img src="https://i.ibb.co/XZB0Mfm/20210130-230501.jpg" width="49%" />
-<img src="https://i.ibb.co/rdBZv2t/20210130-230630.jpg" width="49%" />
+<img src="https://i.ibb.co/XZB0Mfm/20210130-230501.jpg" width="49%" /><img src="https://i.ibb.co/rdBZv2t/20210130-230630.jpg" width="49%" />
 
 ECG lead wires and device:
 
