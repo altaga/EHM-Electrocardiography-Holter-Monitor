@@ -23,6 +23,7 @@
   - [**WebPage Setup**](#webpage-setup)
   - [**WebPage**](#webpage)
 - [**Final Product**](#final-product)
+- [**Non Stop DEMO**](#non-stop-demo)
 - [**Epic DEMO**](#epic-demo)
   - [Closing](#closing)
 - [**References**](#references)
@@ -182,6 +183,8 @@ https://github.com/altaga/EHM-Electrocardiography-Holter-Monitor/blob/main/MPLAB
 
 <img src="https://i.ibb.co/fQXzyL8/New-Project-8.png" width="100%">
 
+A su vez en el lateral del device le colocamos una estampa de NFC para acceder a la plataforma rapidamente desde el smartphone.
+
 [1](https://www.ahajournals.org/doi/pdf/10.1161/hc5001.101063#:~:text=The%20American%20Heart%20Association%20(AHA,the%20limitations%20of%20previous%20studies.)
 
 ## **Dry Electrodes**
@@ -297,6 +300,13 @@ ECG lead wires with Shirt:
 Platform:
 
 <img src="https://i.ibb.co/TcSBcMy/image.png" height="320"><img src="https://i.ibb.co/jbcRLP8/Screenshot-20210130-193858-Edge.jpg" height="320" />
+
+# **Non Stop DEMO**
+
+Video: Click on the image
+[![EKG](https://i.ibb.co/h7krzxt/logo.png)](https://youtu.be/eb57H7PDsuY)
+
+Sorry github does not allow embed videos.
 
 # **Epic DEMO**
 
