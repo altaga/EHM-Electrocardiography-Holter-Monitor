@@ -296,8 +296,7 @@ ECG lead wires with Shirt:
 
 Platform:
 
-<img src="https://i.ibb.co/TcSBcMy/image.png" height="340">
-<img src="https://i.ibb.co/jbcRLP8/Screenshot-20210130-193858-Edge.jpg" height="340" />
+<img src="https://i.ibb.co/TcSBcMy/image.png" height="320"><img src="https://i.ibb.co/jbcRLP8/Screenshot-20210130-193858-Edge.jpg" height="320" />
 
 # **Epic DEMO**
 
