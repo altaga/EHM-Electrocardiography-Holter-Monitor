@@ -56,7 +56,7 @@ SOFTWARE.
 
 #define MAIN_DATATASK_INTERVAL 1000L
 // The debounce time is currently close to 2 Seconds.
-#define AWS_MCHP_SANDBOX_URL "a1gqt8sttiign3.iot.us-east-2.amazonaws.com"
+#define AWS_MCHP_SANDBOX_URL "xxxxxxxxx.iot.xxxxxxxxxxx.amazonaws.com"
 
 // This will contain the device ID, before we have it this dummy value is the init value which is non-0
 char attDeviceID[20] = "BAAAAADD1DBAAADD1D";
