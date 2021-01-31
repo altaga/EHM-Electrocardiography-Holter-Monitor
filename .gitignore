@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# AWS Passwords
+aws-configuration.js
+
 # Object files
 *.o
 *.ko

@@ -2,7 +2,7 @@
 
  An ECG/EKG Holter monitor with heart rate analysis and dashboard. AWS based and powered by Microchip.
 
- <img src="https://i.ibb.co/6yJQnM4/4-heartdisease.png" width="800">
+ <img src="https://i.ibb.co/h7krzxt/logo.png" width="800">
 
  Always use technology to improve the world, if you are a black hat or gray hat hacker please abstain at this point ......... or at least leave your star to make me feel less guilty XP.
 
@@ -16,7 +16,7 @@
 - [**Materials**](#materials)
 - [**Connection Diagram**](#connection-diagram)
 - [**Project:**](#project)
-  - [**Model**](#model)
+  - [**AVR-IoT WA Setup**](#avr-iot-wa-setup)
   - [**Training Dataset**](#training-dataset)
   - [**Train Environment Setup**](#train-environment-setup)
   - [**Training the model**](#training-the-model)
@@ -45,7 +45,7 @@
 
 # **Introduction**
 
-
+Pendiente
 
 # **Problem**
 
@@ -60,17 +60,13 @@ Factors such as:
 
 Too many people must undergo cardiac tests frequently in expensive hospitals with gigantic measuring devices.
 
+<img src="https://i.ibb.co/PZZ5YC7/Sneaky-Whopping-Caimanlizard-size-restricted.gif" width="600">
+
 That's why I decided through AVR-IoT WA develope an ECG/EKG Holter monitor which is able to see and analyze the EKG of the patients in real time.
 
 # **Solution**
 
-Diagram:
 
-<img src="https://i.ibb.co/Hr7MsQh/Untitled-Sketch-bb.png" width="600">
-
-Circuit:
-
-<img src="https://i.ibb.co/Hr7MsQh/Untitled-Sketch-bb.png" width="600">
 
 # **Materials**
 
@@ -94,15 +90,35 @@ https://www.microchip.com/en-us/development-tools-tools-and-software/mplab-x-ide
 - AWS:
 https://aws.amazon.com/
 
+Cloud Services:
+
+- AWS IoT
+https://aws.amazon.com/iot/
+- AWS Amplify
+https://aws.amazon.com/amplify/
+- AWS Lambda
+https://aws.amazon.com/lambda/
+- AWS API Gateway
+https://aws.amazon.com/api-gateway/
+
+Python Libraries:
+
+- Heartpy
+https://pypi.org/project/heartpy/
+
 # **Connection Diagram**
 
 This is the connection diagram of the system:
 
-<img src="PENDING" width="1000">
+<img src="https://i.ibb.co/VmbKdkZ/New-Project-7.png" width="1000">
+
+Circuit:
+
+<img src="https://i.ibb.co/Hr7MsQh/Untitled-Sketch-bb.png" width="1000">
 
 # **Project:**
 
-## **Model**
+## **AVR-IoT WA Setup**
 
 In order to solve the problem of detecting the use of masks, it is necessary to carry out a CCN (convolutional neural network) which is capable of identifying if a human face is  wearing a mask.
 
