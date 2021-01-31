@@ -23,7 +23,6 @@
   - [**WebPage Setup**](#webpage-setup)
   - [**WebPage**](#webpage)
 - [**Final Product**](#final-product)
-  - [WE ACTUALLY TESTED IT IN A WORKING BUSINESS](#we-actually-tested-it-in-a-working-business)
 - [**Epic DEMO**](#epic-demo)
   - [Closing](#closing)
 - [**References**](#references)
@@ -95,11 +94,11 @@ https://pypi.org/project/heartpy/
 
 This is the connection diagram of the system:
 
-<img src="https://i.ibb.co/VmbKdkZ/New-Project-7.png" width="1000">
+<img src="https://i.ibb.co/VmbKdkZ/New-Project-7.png" width="100%">
 
 Circuit:
 
-<img src="https://i.ibb.co/Hr7MsQh/Untitled-Sketch-bb.png" width="1000">
+<img src="https://i.ibb.co/Hr7MsQh/Untitled-Sketch-bb.png" width="100%">
 
 # **Project:**
 
@@ -117,13 +116,13 @@ https://github.com/microchip-pic-avr-solutions/microchip-iot-developer-guides-fo
 
 En este caso deberas de ver los datos de la board llegando a AWS IoT de la siguiente forma 1 cada segundo:
 
-<img src="https://i.ibb.co/DWxsWHN/image.png" width="1000">
+<img src="https://i.ibb.co/DWxsWHN/image.png" width="100%">
 
 En mi caso estoy obteniendo los datos de un ECG, anota el numero que aparece como topic, ya que este numero nos servira mas adelante para visualizar los datos de nuestra pagina web.
 
 NOTA: Haciendo un copy/paste en un bloc de notas podras ver el topic completo, AWS por estetica lo corta cuando lo visualizas.
 
-<img src="https://i.ibb.co/jbbFC2k/image.png" width="1000">
+<img src="https://i.ibb.co/jbbFC2k/image.png" width="100%">
 
 ## **Code Highlights**
 
@@ -181,9 +180,9 @@ Para poder obtener correctamente una lectura de ECG y mandarla a AWS sin perder 
 Para mas detalles este codigo esta en la siguiente carpeta:
 https://github.com/altaga/EHM-Electrocardiography-Holter-Monitor/blob/main/MPLAB%20Project/AVRIoT.X/mcc_generated_files/application_manager.c
 
-<img src="https://i.ibb.co/fQXzyL8/New-Project-8.png" width="1000">
+<img src="https://i.ibb.co/fQXzyL8/New-Project-8.png" width="100%">
 
-[1] https://www.ahajournals.org/doi/pdf/10.1161/hc5001.101063#:~:text=The%20American%20Heart%20Association%20(AHA,the%20limitations%20of%20previous%20studies.
+[1](https://www.ahajournals.org/doi/pdf/10.1161/hc5001.101063#:~:text=The%20American%20Heart%20Association%20(AHA,the%20limitations%20of%20previous%20studies.)
 
 ## **Dry Electrodes**
 
@@ -194,7 +193,7 @@ Materials:
 - Silver Conductive Ink.
 - Electrode External Snap.
 
-<img src="https://i.ibb.co/hLZ8DTB/20210130-204013.png" width="1000">
+<img src="https://i.ibb.co/hLZ8DTB/20210130-204013.png" width="100%">
 
 ## **Electrode arrangement**
 
@@ -206,15 +205,15 @@ Nosotros colocamos dos electrodos en la mano derecha y uno en la mano izquierda 
 
 Right:
 
-<img src="https://i.ibb.co/26LFnGX/20210130-205858.jpg" width="500">
+<img src="https://i.ibb.co/26LFnGX/20210130-205858.jpg" width="600">
 
 Left:
 
-<img src="https://i.ibb.co/tD4spc2/20210130-205832.jpg" width="500">
+<img src="https://i.ibb.co/tD4spc2/20210130-205832.jpg" width="600">
 
 Ground:
 
-<img src="https://i.ibb.co/fYL5W2X/20210130-205900.jpg" width="500">
+<img src="https://i.ibb.co/fYL5W2X/20210130-205900.jpg" width="600">
 
 Con esta dispocicion de electrodos podemos obtener una señal de ECG que si no es perfecta, podremos arreglrla con un poco de procesamiento en la pagina web.
 
@@ -229,7 +228,7 @@ Para configurar correctamente la pagina web crea en la siguiente ruta Webapp\src
     };
     module.exports = awsConfiguration;
 
-<img src="https://i.ibb.co/w0fbqRY/image.png" width="500">
+<img src="https://i.ibb.co/w0fbqRY/image.png" width="100%">
 
 ## **WebPage**
 
@@ -253,24 +252,24 @@ Para el estilo y frontend de la plataforma se usaron los paquetes:
 
 Y para el deploy de la plataforma se utilizo como fuente un repositorio de Github y AWS Amplify.
 
-<img src="https://i.ibb.co/Dk8HBL4/image.png" width="1000">
+<img src="https://i.ibb.co/Dk8HBL4/image.png" width="100%">
 
 La pagina desplegada tiene 2 paths importantes.
 
 - El Index, el cual es la carta de presentacion de nuestra aplicacion
 
-<img src="https://i.ibb.co/26H6kfJ/image.png" width="1000">
+<img src="https://i.ibb.co/26H6kfJ/image.png" width="100%">
 
 - El monitor ECG, sin embargo este tiene algo importante, segun el sensor que querramos visualizar, lo tendremos que especificar en el path segun el numero que hayamos recibido en AWS IoT.
 
-<img src="https://i.ibb.co/TcSBcMy/image.png" width="1000">
+<img src="https://i.ibb.co/TcSBcMy/image.png" width="100%">
 
 - La pagina web tiene algunos funciones especiales:
   - Filtrado de señal en tiempo real
     - Señal sin filtrar:
-  <img src="https://i.ibb.co/dG5xrqh/image.png" width="1000">
+  <img src="https://i.ibb.co/dG5xrqh/image.png" width="100%">
     - Señal filtrada:
-  <img src="https://i.ibb.co/w7DqPyh/image.png" width="1000">
+  <img src="https://i.ibb.co/w7DqPyh/image.png" width="100%">
 
 La funcion de Analyze EKG, manda los datos sin filtrar recibidos en la pagina web y los manda a nuestra funcion Lambda para ser analizados por la libreria HeartPy y devuelve datos valiosos para los medicos.
 
@@ -283,25 +282,23 @@ Sorry github does not allow embed videos.
 
 # **Final Product**
 
-## WE ACTUALLY TESTED IT IN A WORKING BUSINESS
+Hotler Monitor with Case:
 
-This was perhaps the most important part of the whole project. We have had built a pretty good proof of concept, but technology exists to be used and businesses have been hit the hardest by COVID-19, specially the small and medium ones. So , first and foremost we attempted to find a business nearby that operates and has to have its clients wearing a mask (and that will allow us to test the PoC). What came to mind first were restaurants, 7 eleven-ish stores and supermarkets. As naive as we were, we went first to several supermarkets to just try and se if they would allow us to test the PoC and record its functionality. Of course, we were soundly rejected. Later we tried with an Ice-cream store after several attempts with supermarkets and 7elevens. And they finally allowed us to test it and record some results that you can see in our demo video! 
+<img src="https://i.ibb.co/XZB0Mfm/20210130-230501.jpg" width="49%" />
+<img src="https://i.ibb.co/rdBZv2t/20210130-230630.jpg" width="49%" />
 
-ZCU104:
+ECG lead wires and device:
 
-<img src="https://i.ibb.co/txzbkKK/20201205-164726-2.jpg" width="1000" />
+<img src="https://i.ibb.co/Y3nQK3k/20210130-170836.jpg" width="100%" />
 
-Face Mask Dispenser:
+ECG lead wires with Shirt:
 
-<img src="https://i.ibb.co/0GFGhHx/20201205-164709-2.jpg" width="1000" />
+<img src="https://i.ibb.co/RgT9ZXx/20201006-183412.jpg" width="100%" />
 
-Display:
+Platform:
 
-<img src="https://i.ibb.co/DbxVXnh/Display.png" width="1000" />
-
-Complete solution working in local business
-
-<img src="https://i.ibb.co/Vm4mK5r/20201205-164641-2.jpg" width="1000" />
+<img src="https://i.ibb.co/TcSBcMy/image.png" height="340">
+<img src="https://i.ibb.co/jbcRLP8/Screenshot-20210130-193858-Edge.jpg" height="340" />
 
 # **Epic DEMO**
 
@@ -312,7 +309,7 @@ Sorry github does not allow embed videos.
 
 ## Closing
 
-
+PENDING
 
 # **References**
 
