@@ -20,6 +20,7 @@
   - [**Code Highlights**](#code-highlights)
   - [**Dry Electrodes**](#dry-electrodes)
   - [**Electrode arrangement**](#electrode-arrangement)
+  - [**WebPage Setup**](#webpage-setup)
   - [**WebPage**](#webpage)
 - [**Final Product**](#final-product)
   - [WE ACTUALLY TESTED IT IN A WORKING BUSINESS](#we-actually-tested-it-in-a-working-business)
@@ -105,6 +106,12 @@ Circuit:
 ## **AVR-IoT WA Setup**
 
 Para poder realizar el primer setup de nuestro dispositivo recomiendo que sigas la guia oficial de Microchip ya que es un proceso muy sencillo de realizar en el caso de AWS.
+
+Vas a necesitar el siguiente archivo para hacer correctamente la configuracion de AWS.
+
+https://www.microchip.com/design-centers/internet-of-things/iot-dev-kits/iot-provision-tool
+
+Guia Microchip:
 
 https://github.com/microchip-pic-avr-solutions/microchip-iot-developer-guides-for-aws/tree/master/connect-the-board-to-your-aws-account
 
@@ -210,6 +217,19 @@ Ground:
 <img src="https://i.ibb.co/fYL5W2X/20210130-205900.jpg" width="500">
 
 Con esta dispocicion de electrodos podemos obtener una señal de ECG que si no es perfecta, podremos arreglrla con un poco de procesamiento en la pagina web.
+
+## **WebPage Setup**
+
+Para configurar correctamente la pagina web crea en la siguiente ruta Webapp\src\pages\ecg un archivo llamado aws-configuration.js y coloca las credenciales de AWSIoT y el Identity Pool de Cognito.
+
+    var awsConfiguration = {
+      poolId: "us-east-1:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // 'YourCognitoIdentityPoolId'
+      host:"xxxxxxxxxxxxxxxxxx.iot.us-east-1.amazonaws.com", // 'YourAwsIoTEndpoint', e.g. 'prefix.iot.us-east-1.amazonaws.com'
+      region: "us-east-1" // 'YourAwsRegion', e.g. 'us-east-1'
+    };
+    module.exports = awsConfiguration;
+
+<img src="https://i.ibb.co/w0fbqRY/image.png" width="500">
 
 ## **WebPage**
 
