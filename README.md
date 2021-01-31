@@ -136,11 +136,19 @@ Para poder obtener correctamente una lectura de ECG y mandarla a AWS sin perder 
 - La frecuencia minima de muestreo segun la AHA para un ECG es de 150Hz [1].
   - Para solucionar esto hicimos que la velocidad de muestreo fuera de 150 HZ a travez de programar una interrupcion por Timer, haciendo que el microcontrolador haga esta tarea 150 veces por segundo.
 
+        // Interrupt Routine
         ISR(TCA0_OVF_vect) {
             free_running();
             TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
         }
         ...
+        // Enable Interrupt 
+        // application_init(void) inside here
+        TCA0_init();
+        sei(); // Enable global interrupts by setting global interrupt enable bit in SREG
+
+        ...
+        // Setup timer Interrupt function
         void TCA0_init(void) {
             /* enable overflow interrupt */
             TCA0.SINGLE.INTCTRL = TCA_SINGLE_OVF_bm;
@@ -157,15 +165,20 @@ Para poder obtener correctamente una lectura de ECG y mandarla a AWS sin perder 
             TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1024_gc /* set clock source (sys_clk/1024) */
                     | TCA_SINGLE_ENABLE_bm; /* start timer */
         }
+
+<img src="https://i.ibb.co/1vpX2x1/image.png" width="100%">
   
 - El microcontrolador va a mandar aproximadamente un dato cada segundo.
   - Esto se realizo al alterar la velocidad con la que se realiza la rutina en el codigo principal.
 
         #define MAIN_DATATASK_INTERVAL 1000L
 
+<img src="https://i.ibb.co/fQXzyL8/New-Project-8.png" width="100%">
+
 - La obtencion de datos del ecg no se puede detener mientras se mandan los datos a la nube.
   - Se hizo que el ADC funcionara por free_running para evitar interrupciones de lectura cuando se mandan los datos a nube.
 
+        // ADC Freeruning read function
         void free_running() {
             while (1) {
                 if (ADC0_IsConversionDone()) {
@@ -178,12 +191,19 @@ Para poder obtener correctamente una lectura de ECG y mandarla a AWS sin perder 
             }
         }
 
+        // Start ADC in Free runing Mode 
+        // application_init(void) inside here
+        ADC0.CTRLA |= 1 << ADC_FREERUN_bp;
+        ADC0_StartConversion(ADC_CHANNEL);
+
+<img src="https://i.ibb.co/YkT00RT/New-Project-9.png" width="100%">
+
 Para mas detalles este codigo esta en la siguiente carpeta:
 https://github.com/altaga/EHM-Electrocardiography-Holter-Monitor/blob/main/MPLAB%20Project/AVRIoT.X/mcc_generated_files/application_manager.c
 
-<img src="https://i.ibb.co/fQXzyL8/New-Project-8.png" width="100%">
-
 A su vez en el lateral del device le colocamos una estampa de NFC para acceder a la plataforma rapidamente desde el smartphone.
+
+<img src="https://i.ibb.co/5FGvSzL/20210131-013512-1.png" width="60%">
 
 [1](https://www.ahajournals.org/doi/pdf/10.1161/hc5001.101063#:~:text=The%20American%20Heart%20Association%20(AHA,the%20limitations%20of%20previous%20studies.)
 
