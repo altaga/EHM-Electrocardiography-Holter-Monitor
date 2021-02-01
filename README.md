@@ -12,7 +12,7 @@
 - [**Table of contents**](#table-of-contents)
 - [**Introduction**](#introduction)
 - [**Problem**](#problem)
-- [**Solution**](#solution)
+- [**Second Problem**](#second-problem)
 - [**Materials**](#materials)
 - [**Connection Diagram**](#connection-diagram)
 - [**Project:**](#project)
@@ -30,7 +30,36 @@
 
 # **Introduction**
 
-Pendiente
+Our heart beats 115200 times a day, it is such a fine machine that does not stop during our lives. However, not many people have the advantage to have this machine in good conditions. Many factors of daily life can permanently affect cardiac function.
+
+Factors such as:
+
+* Sedentarism.
+* Diet full of Salt, saturated fats and refined sugar.
+* Alcoholic intake.
+* Smoking
+* High blood pressure
+* Obesity
+* Family history of heart disease
+* History of a previous heart attack
+* Age over 45 for men, or over 55 for women
+* Male gender (there's a direct correlation for cardiovascular disease)
+* Substance abuse
+* Low potassium or magnesium
+
+This brings us to our pain point:
+
+Quite a lot of people have to undergo cardiac tests frequently in expensive hospitals with gigantic measuring devices. We are in a time where open health is stronger than ever and it is time to make the patient the point of care.
+
+The market for electrocardiography is quite enormous, as it has become the standard for patients with heart risks.
+
+<img src="https://hackster.imgix.net/uploads/attachments/1253038/image_6HoGEtNXFh.png?auto=compress%2Cformat&w=740&h=555&fit=max" width="600">
+
+What we can see in this graphic is that most of the electrocardiographs are those big machines (as a Biomedical Engineer I can attest that most, are quite old). In addition to this most in the "holter" category are not really wearables but smaller ones that can be carried despite that a wearable one that can be used at home could provide invaluable information about the patient's heart.
+
+One thing that we have to notice first. The first of wearables has already come out in the market and the results are not that great. The main issue that Doctors put forth is that it is too much information, think of the internet before data aggregators, it has no value if it cannot be interpreted correctly and that is something that has to be taken into consideration. A solution should aggregate all that data and provide carers with useful information.
+
+Because of these reasons through AzureSphere's technology we will create a real-time heart rate, EKG monitoring system and a dashboard deployment, that will be out of the box secure, from the MCU, to the OS, to the cloud. Healthcare data is our most valuable one, and it is evident that this kind of security must become the norm in every device.
 
 # **Problem**
 
@@ -47,11 +76,11 @@ Too many people must undergo cardiac tests frequently in expensive hospitals wit
 
 <img src="https://i.ibb.co/PZZ5YC7/Sneaky-Whopping-Caimanlizard-size-restricted.gif" width="600">
 
-That's why I decided through AVR-IoT WA develope an ECG/EKG Holter monitor which is able to see and analyze the EKG of the patients in real time.
+# **Second Problem**
 
-# **Solution**
+This brings us to the second problem that is quite basic, most ECG machines whether they are Holters or Rest ECGs use gel-based electrodes. These are completely unusable in an athletic environment i.e. Athletes trying to measure themselves during activity. For these reasons we will try while developing the IoT device, to develop at the same time Dry electrodes.
 
-
+That's why we decided through AVR-IoT WA develope an ECG/EKG Holter monitor which is able to see and analyze the EKG of the patients in real time.
 
 # **Materials**
 
@@ -133,7 +162,7 @@ https://www.microchip.com/wwwproducts/en/ATmega4808
 In order to correctly obtain an ECG reading and send it to AWS without losing data, we must take into consideration certain things:
 
 - The minimum sampling rate according to the AHA for an ECG is 150Hz [1].
-- To solve this we made the sampling rate 150 Hz by programming an interrupt by Timer, making the microcontroller do this task 150 times per second.
+  - To solve this we made the sampling rate 150 Hz by programming an interrupt by Timer, making the microcontroller do this task 150 times per second.
    
         // Interrupt Routine
         ISR(TCA0_OVF_vect) {
@@ -168,7 +197,7 @@ In order to correctly obtain an ECG reading and send it to AWS without losing da
 <img src="https://i.ibb.co/1vpX2x1/image.png" width="100%">
   
 - The microcontroller will send approximately one data every second.
-- This was done by altering the speed with which the routine is performed in the main code.
+  - This was done by altering the speed with which the routine is performed in the main code.
 
         #define MAIN_DATATASK_INTERVAL 1000L
 
@@ -178,23 +207,23 @@ In order to correctly obtain an ECG reading and send it to AWS without losing da
    - The ADC was made to work with free_running to avoid read interruptions when sending data to the cloud.
    
   
-        // ADC Freeruning read function
-        void free_running() {
-            while (1) {
-                if (ADC0_IsConversionDone()) {
-                    if (adc_counter < sizeof array / sizeof array[0]) {
-                        array[adc_counter] = ADC0.RES;
-                        adc_counter++;
-                    }
-                    break;
-                }
-            }
-        }
+          // ADC Freeruning read function
+          void free_running() {
+              while (1) {
+                  if (ADC0_IsConversionDone()) {
+                      if (adc_counter < sizeof array / sizeof array[0]) {
+                          array[adc_counter] = ADC0.RES;
+                          adc_counter++;
+                      }
+                      break;
+                  }
+              }
+          }
 
-        // Start ADC in Free runing Mode 
-        // application_init(void) inside here
-        ADC0.CTRLA |= 1 << ADC_FREERUN_bp;
-        ADC0_StartConversion(ADC_CHANNEL);
+          // Start ADC in Free runing Mode 
+          // application_init(void) inside here
+          ADC0.CTRLA |= 1 << ADC_FREERUN_bp;
+          ADC0_StartConversion(ADC_CHANNEL);
 
 <img src="https://i.ibb.co/YkT00RT/New-Project-9.png" width="100%">
 
@@ -332,13 +361,13 @@ Sorry github does not allow embed videos.
 # **Epic DEMO**
 
 Video: Click on the image
-[![EKG](https://i.ibb.co/h7krzxt/logo.png)](PENDING)
+[![EKG](https://i.ibb.co/h7krzxt/logo.png)](https://youtu.be/dF6aVnAowOc)
 
 Sorry github does not allow embed videos.
 
 ## Closing
 
-PENDING
+We think we have achieved a great medical device prototype with this project. It does everything an IoT-capable device should do and probably we have solved some of the problems in relation with gel-based electrodes. And that is perhaps the main innovation with this device. It has huge market potential mainly with sports science applications. For our next steps in relation with this project we will focus on testing it in both sports and clinical applications and also on the market of sport-related or exercise related classes and services, which also show great potential.
 
 # **References**
 
@@ -346,8 +375,4 @@ Links:
 
 (1) https://www.ahajournals.org/doi/pdf/10.1161/hc5001.101063#:~:text=The%20American%20Heart%20Association%20(AHA,the%20limitations%20of%20previous%20studies.
 
-(2) 
-
-(3) 
-
-(4) 
+(2)https://medicalfuturist.com/ten-ways-technology-changing-healthcare/?utm_source=The%20Medical%20Futurist%20Newsletter&utm_campaign=ee5854702c-EMAIL_CAMPAIGN_2019_10_29_diabetes_companies_COPY_&utm_medium=email&utm_term=0_efd6a3cd08-ee5854702c-420575081
