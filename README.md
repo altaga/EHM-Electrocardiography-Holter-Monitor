@@ -105,37 +105,36 @@ Circuit:
 
 ## **AVR-IoT WA Setup**
 
-Para poder realizar el primer setup de nuestro dispositivo recomiendo que sigas la guia oficial de Microchip ya que es un proceso muy sencillo de realizar en el caso de AWS.
+In order to do the first setup of our device, I recommend that you follow the official Microchip guide since it is a very simple process to perform in the case of AWS.
 
-Vas a necesitar el siguiente archivo para hacer correctamente la configuracion de AWS.
-
+You will need the following file to correctly configure AWS.
 https://www.microchip.com/design-centers/internet-of-things/iot-dev-kits/iot-provision-tool
 
-Guia Microchip:
+Microchip guide:
 
 https://github.com/microchip-pic-avr-solutions/microchip-iot-developer-guides-for-aws/tree/master/connect-the-board-to-your-aws-account
 
-En este caso deberas de ver los datos de la board llegando a AWS IoT de la siguiente forma 1 cada segundo:
+In this case you should see the data from the board arriving at AWS IoT as follows 1 every second:
 
 <img src="https://i.ibb.co/DWxsWHN/image.png" width="100%">
 
-En mi caso estoy obteniendo los datos de un ECG, anota el numero que aparece como topic, ya que este numero nos servira mas adelante para visualizar los datos de nuestra pagina web.
+In this case I am obtaining the data from an ECG, write down the number that appears as a topic, since this number will serve us later to view the data on our website.
 
-NOTA: Haciendo un copy/paste en un bloc de notas podras ver el topic completo, AWS por estetica lo corta cuando lo visualizas.
+NOTE: By making a copy / paste in a notepad you can see the entire topic, AWS for aesthetics cuts it when you view it.
 
 <img src="https://i.ibb.co/jbbFC2k/image.png" width="100%">
 
 ## **Code Highlights**
 
-Para poder programar correctamente el microcontrolador tenemos que saber que el microcontrolador es:
+In order to program the microcontroller correctly we have to know that the microcontroller is:
 
 https://www.microchip.com/wwwproducts/en/ATmega4808
 
-Para poder obtener correctamente una lectura de ECG y mandarla a AWS sin perder datos, debemos tener en consideracion ciertas cosas:
+In order to correctly obtain an ECG reading and send it to AWS without losing data, we must take into consideration certain things:
 
-- La frecuencia minima de muestreo segun la AHA para un ECG es de 150Hz [1].
-  - Para solucionar esto hicimos que la velocidad de muestreo fuera de 150 HZ a travez de programar una interrupcion por Timer, haciendo que el microcontrolador haga esta tarea 150 veces por segundo.
-
+- The minimum sampling rate according to the AHA for an ECG is 150Hz [1].
+- To solve this we made the sampling rate 150 Hz by programming an interrupt by Timer, making the microcontroller do this task 150 times per second.
+   
         // Interrupt Routine
         ISR(TCA0_OVF_vect) {
             free_running();
@@ -168,16 +167,17 @@ Para poder obtener correctamente una lectura de ECG y mandarla a AWS sin perder 
 
 <img src="https://i.ibb.co/1vpX2x1/image.png" width="100%">
   
-- El microcontrolador va a mandar aproximadamente un dato cada segundo.
-  - Esto se realizo al alterar la velocidad con la que se realiza la rutina en el codigo principal.
+- The microcontroller will send approximately one data every second.
+- This was done by altering the speed with which the routine is performed in the main code.
 
         #define MAIN_DATATASK_INTERVAL 1000L
 
 <img src="https://i.ibb.co/fQXzyL8/New-Project-8.png" width="100%">
 
-- La obtencion de datos del ecg no se puede detener mientras se mandan los datos a la nube.
-  - Se hizo que el ADC funcionara por free_running para evitar interrupciones de lectura cuando se mandan los datos a nube.
-
+- Ecg data collection cannot be stopped while data is being sent to the cloud.
+   - The ADC was made to work with free_running to avoid read interruptions when sending data to the cloud.
+   
+  
         // ADC Freeruning read function
         void free_running() {
             while (1) {
@@ -198,10 +198,10 @@ Para poder obtener correctamente una lectura de ECG y mandarla a AWS sin perder 
 
 <img src="https://i.ibb.co/YkT00RT/New-Project-9.png" width="100%">
 
-Para mas detalles este codigo esta en la siguiente carpeta:
+For more details you can find the code in the following folder:
 https://github.com/altaga/EHM-Electrocardiography-Holter-Monitor/blob/main/MPLAB%20Project/AVRIoT.X/mcc_generated_files/application_manager.c
 
-A su vez en el lateral del device le colocamos una estampa de NFC para acceder a la plataforma rapidamente desde el smartphone.
+In turn, on the side of the device we put an NFC stamp to access the platform quickly from the smartphone.
 
 <img src="https://i.ibb.co/5FGvSzL/20210131-013512-1.png" width="60%">
 
@@ -209,7 +209,9 @@ A su vez en el lateral del device le colocamos una estampa de NFC para acceder a
 
 ## **Dry Electrodes**
 
-Ddebido a que este es un device que vamos a estar utilizando un largo perdiodo de tiempo y ademas es un dispositivo que debe de ser usado todos los dias, podemos entender que el uso de electrodos desechables es poco viable. Asi que por eso decidimos realiza nuestros propios electrodos secos.
+This is perhaps the gre3atest development done in the project!
+
+Due to the fact that this is a device that we are going to be using for long periods of time and it is also a device that must be used every day, we soon understood that the use of disposable electrodes is not feasible. So that's why we decided to make our own dry electrodes.
 
 Materials:
 - Copper Plate.
@@ -220,11 +222,11 @@ Materials:
 
 ## **Electrode arrangement**
 
-Para poder realizar la lectura del ECG y que ademas el dispositivo sea los menos incomodo posible, tomamos en consideracion el arreglo de Electrodos de el AppleWatch 
+In order to read the ECG and also make the device as comfortable as possible, we take into consideration the arrangement of Electrodes of the AppleWatch
 
 <img src="https://i.ibb.co/kcy5XYN/image.png" width="500">
 
-Nosotros colocamos dos electrodos en la mano derecha y uno en la mano izquierda de la siguiente forma.
+First we place two electrodes on the right hand and one on the left hand as follows.
 
 Right:
 
@@ -238,11 +240,11 @@ Ground:
 
 <img src="https://i.ibb.co/fYL5W2X/20210130-205900.jpg" width="600">
 
-Con esta dispocicion de electrodos podemos obtener una señal de ECG que si no es perfecta, podremos arreglrla con un poco de procesamiento en la pagina web.
+With this arrangement of electrodes we can obtain an ECG signal that while not perfect, we can fix with a little processing on the web page.
 
 ## **WebPage Setup**
 
-Para configurar correctamente la pagina web crea en la siguiente ruta Webapp\src\pages\ecg un archivo llamado aws-configuration.js y coloca las credenciales de AWSIoT y el Identity Pool de Cognito.
+To correctly configure the web page, create a file called aws-configuration.js in the following path Webapp \ src \ pages \ ecg and enter the AWSIoT credentials and the Cognito Identity Pool.
 
     var awsConfiguration = {
       poolId: "us-east-1:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // 'YourCognitoIdentityPoolId'
@@ -255,48 +257,47 @@ Para configurar correctamente la pagina web crea en la siguiente ruta Webapp\src
 
 ## **WebPage**
 
-La pagina web se realizo utilizando el framework de ReactJS.
+The web page was made using the ReactJS framework.
 
 https://reactjs.org/
 
-Para la funcionalidad de la pagina web se utilizaron dos SDK de AWS para Javascript.
+For the functionality of the website, two AWS SDKs for Javascript were used.
 
-- Para el control de acceso de la pagina web a consumir los recursos de AWSIoT
+- For the access control of the web page to consume the AWSIoT resources
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/CognitoIdentity.html
-- Para poder realizar la lectura del topic de AWS IoT
+- To be able to read the AWS IoT topic
 https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/Iot.html
 
-Para el analisis del ECG se utilizo una funcion Lambda con la cual accedemos mediante API y tiene configurada como funcion con la libreria [Heartpy](https://pypi.org/project/heartpy/).
+For the analysis of the ECG, a Lambda function was used with which we access via API and has been configured as a function with the [Heartpy] library (https://pypi.org/project/heartpy/).
 
-Para el estilo y frontend de la plataforma se usaron los paquetes:
+For the style and frontend of the platform, the packages were used:
 
 - ReactStrap: https://reactstrap.github.io/
-- ChartJS : https://www.chartjs.org/
+- ChartJS: https://www.chartjs.org/
 
-Y para el deploy de la plataforma se utilizo como fuente un repositorio de Github y AWS Amplify.
-
+And for the platform deployment, a Github and AWS Amplify repository was used as a source.
 <img src="https://i.ibb.co/Dk8HBL4/image.png" width="100%">
 
-La pagina desplegada tiene 2 paths importantes.
+The displayed web page has 2 important paths.
 
-- El Index, el cual es la carta de presentacion de nuestra aplicacion
+- The Index, which is the presentation letter of our application
 
-<img src="https://i.ibb.co/26H6kfJ/image.png" width="100%">
+<img src = "https://i.ibb.co/26H6kfJ/image.png" width = "100%">
 
-- El monitor ECG, sin embargo este tiene algo importante, segun el sensor que querramos visualizar, lo tendremos que especificar en el path segun el numero que hayamos recibido en AWS IoT.
+- The ECG monitor, however this has something important. Depending on the sensor we want to visualize, we will have to specify it on the path according to the number we have received in AWS IoT.
 
-<img src="https://i.ibb.co/TcSBcMy/image.png" width="100%">
+<img src = "https://i.ibb.co/TcSBcMy/image.png" width = "100%">
 
-- La pagina web tiene algunos funciones especiales:
-  - Filtrado de señal en tiempo real
-    - Señal sin filtrar:
-  <img src="https://i.ibb.co/dG5xrqh/image.png" width="100%">
-    - Señal filtrada:
-  <img src="https://i.ibb.co/w7DqPyh/image.png" width="100%">
+- The website has some special functions:
+   - Real-time signal filtering
+     - Unfiltered signal:
+   <img src = "https://i.ibb.co/dG5xrqh/image.png" width = "100%">
+     - Filtered signal:
+   <img src = "https://i.ibb.co/w7DqPyh/image.png" width = "100%">
 
-La funcion de Analyze EKG, manda los datos sin filtrar recibidos en la pagina web y los manda a nuestra funcion Lambda para ser analizados por la libreria HeartPy y devuelve datos valiosos para los medicos.
+The Analyze EKG function sends the unfiltered data received on the web page and sends it to our Lambda function to be analyzed by the HeartPy library and returns valuable data for physicians.
 
-La funcion de SavePDF salva los datos en pantalla para registro.
+The SavePDF function saves the data on screen for record.
 
 Video: Click on the image
 [![EKG](https://i.ibb.co/h7krzxt/logo.png)](https://youtu.be/zGBveqvmWrU)
